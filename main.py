@@ -84,8 +84,8 @@ class Board():
 
                     else: 
                         if self.board[rows][cols].confirm == 0:
-                            fontsmall = pygame.font.Font('freesansbold.ttf', 20)
-                            val_text = fontsmall.render(str(self.board[rows][cols].temp), True, (102, 51, 0))
+                            medium_font = pygame.font.Font('freesansbold.ttf', 20)
+                            val_text = medium_font.render(str(self.board[rows][cols].temp), True, (102, 51, 0))
                             screen.blit(val_text, (word_x - 10, word_y - 10))
                     
                         else:
@@ -108,7 +108,6 @@ class Board():
     
     def draw_wrong(self):
         screen.blit(wrong,(self.selected[1]* 60 + 35, self.selected[0]* 60 + 35))
-        pygame.time.wait(400)
     
     def format_time(self):
         minute = 0
@@ -119,9 +118,14 @@ class Board():
         screen.blit(time_text, (450, 600))
 
     def draw_logo(self):
-        medium_font = pygame.font.Font('freesansbold.ttf', 15)
-        val_text = medium_font.render("Sudocracker by Ngan Jason", True, (0,0,0))
-        screen.blit(val_text, (20, 615))
+        small_font = pygame.font.Font('freesansbold.ttf', 15)
+        medium_font = pygame.font.Font('freesansbold.ttf', 20)
+        val_text1 = small_font.render("Press C - Reset" , True, (51,25,0))
+        val_text2 = small_font.render("Press Space - Solve", True, (51,25,0))
+        val_text3 = small_font.render("Sudocracker by Ngan Jason", True, (0,0,0))
+        screen.blit(val_text1, (20, 570))
+        screen.blit(val_text2, (20, 590))
+        screen.blit(val_text3, (20, 615))
 
     def input_temp(self,key):
         if self.selected != None:
@@ -205,6 +209,7 @@ class Board():
         for possible_sol in range(1,10):
             if (self.is_safe(curr_x, curr_y, possible_sol)):
                 self.board[curr_x][curr_y].val = possible_sol
+                self.selected = [curr_x, curr_y]
                 # self.update_win()
 
                 if (self.find_sol(curr_x, curr_y + 1)):
@@ -212,6 +217,7 @@ class Board():
                 
                 else:
                     self.board[curr_x][curr_y].val = 0
+                    self.selected = [curr_x, curr_y]
                     # self.update_win()
         return False
 
@@ -236,6 +242,8 @@ class Board():
         if self.wrong == 1:
             self.draw_wrong()
             self.wrong = 0
+            pygame.display.update()
+            pygame.time.delay(500)
         pygame.display.update()
 
 sudoku = Board(grid, 9, 9, 540, 540, 60, 20, 20, screen)
