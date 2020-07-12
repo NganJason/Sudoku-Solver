@@ -7,9 +7,10 @@ pygame.init()
 screen = pygame.display.set_mode((580,650))
 running = True
 background = pygame.image.load("background.jpeg")
+wrong = pygame.image.load("wrong.png")
 font = pygame.font.Font('freesansbold.ttf', 40)
-# pygame.mixer.music.load("background_music.mp3")
-# pygame.mixer.music.play(-1)
+pygame.mixer.music.load("background_music.wav")
+pygame.mixer.music.play(-1)
 
 grid = [[6, 0, 9, 0, 0, 4, 0, 0, 1], 
          [8, 0, 0, 0, 5, 0, 0, 0, 0], 
@@ -42,6 +43,7 @@ class Board():
         self.start_y = start_y
         self.board = [[Box(rows,cols,grid[rows][cols],1)for cols in range(self.col)] for rows in range(self.row)] 
         self.selected = None
+        self.wrong = 0
         self.play_time = 0
 
         for rows in range(self.row):
@@ -103,6 +105,23 @@ class Board():
             row = self.selected[0]
             col = self.selected[1]
             pygame.draw.rect(self.screen, (255,0,0), ((20 + col * self.gap, 20 + row * self.gap), (60, 60)), 3)
+    
+    def draw_wrong(self):
+        screen.blit(wrong,(self.selected[1]* 60 + 35, self.selected[0]* 60 + 35))
+        pygame.time.wait(400)
+    
+    def format_time(self):
+        minute = 0
+        minute = self.play_time//60
+        second = self.play_time - minute * 60
+        time = f"{minute:02}:{second:02}"
+        time_text = font.render(time, True, (0,0,0))
+        screen.blit(time_text, (450, 600))
+
+    def draw_logo(self):
+        medium_font = pygame.font.Font('freesansbold.ttf', 15)
+        val_text = medium_font.render("Sudocracker by Ngan Jason", True, (0,0,0))
+        screen.blit(val_text, (20, 615))
 
     def input_temp(self,key):
         if self.selected != None:
@@ -118,9 +137,13 @@ class Board():
             row = self.selected[0]
             col = self.selected[1]
             if self.board[row][col].temp != 0:
-                self.board[row][col].val = self.board[row][col].temp
-                self.board[row][col].temp = 0
-                self.board[row][col].confirm = 1
+                if (self.is_safe(row,col,self.board[row][col].temp)):
+                    self.board[row][col].val = self.board[row][col].temp
+                    self.board[row][col].temp = 0
+                    self.board[row][col].confirm = 1
+                else:
+                    self.wrong = 1
+                    self.board[row][col].temp = 0
     
     def del_val(self):
         if self.selected != None:
@@ -130,14 +153,13 @@ class Board():
                 self.board[row][col].val = 0
                 self.board[row][col].temp = 0
                 self.board[row][col].confirm = 0
-
-    def format_time(self):
-        minute = 0
-        minute = self.play_time//60
-        second = self.play_time - minute * 60
-        time = f"{minute:02}:{second:02}"
-        time_text = font.render(time, True, (0,0,0))
-        screen.blit(time_text, (450, 600))
+    
+    def clear_val(self):
+        for rows in range(self.row):
+            for cols in range(self.col):
+                if self.board[rows][cols].default == 0:
+                    self.board[rows][cols].val = 0
+                    self.board[rows][cols].temp = 0
 
     def find_boxRange(self, val):
         if val < 3:
@@ -171,8 +193,6 @@ class Board():
     
     def find_sol(self, curr_x, curr_y):
         self.print_board()
-        # if rows == 8 and cols == 9:
-        #     return True 
         if curr_x == 8 and curr_y == 9:
                 return True
 
@@ -212,6 +232,10 @@ class Board():
         self.draw_val()
         self.highlight_box()
         self.format_time()
+        self.draw_logo()
+        if self.wrong == 1:
+            self.draw_wrong()
+            self.wrong = 0
         pygame.display.update()
 
 sudoku = Board(grid, 9, 9, 540, 540, 60, 20, 20, screen)
@@ -260,6 +284,9 @@ while running:
                     sudoku.del_val()
                 if event.key == pygame.K_SPACE:
                     sudoku.solver()
+                if event.key == pygame.K_c:
+                    sudoku.clear_val()
+
 
     play_time = round(time.time() - start)
     sudoku.play_time = play_time
